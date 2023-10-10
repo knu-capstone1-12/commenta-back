@@ -13,12 +13,17 @@ app.get('/', (req, res) => {
     res.send("Hello, World!");
 });
 
-app.post('/sttrec', upload.single('files'), (req, res) => {
+app.post('/api/voiceToText', upload.single('files'), (req, res) => {
     if (!req.file) {
         return res.status(400).send('Please Upload file');
     }
 
     res.status(200).send('uploaded');
+});
+
+app.get('/analyzetext', (req, res) => {
+
+    res.status(200).send('Analyzed');    
 });
 
 app.listen(4000, () => console.log("Waiting on 4000 port."));
