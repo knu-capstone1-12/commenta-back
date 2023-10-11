@@ -3,14 +3,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './uploads/'); // 파일이 저장되는 경로입니다.
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname); // 파일 저장 포멧
-    }
-});
 const upload = multer({ storage: multer.diskStorage({
         filename(req, file, done) {
             console.log(file);
@@ -35,19 +27,24 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
         return res.status(400).send('Please Upload file');
     }
 
-    // 파일을 저장할 경로를 지정
-    // const filePath = path.join(__dirname, 'uploads', req.file.originalname);
+    const inputFilePath = req.file.path;
+    const outputFilePath = path.join(__dirname, 'uploads', 'output.mp3');
 
-    // // 파일을 저장
-    // fs.writeFile(filePath, req.file.buffer, (err) => {
-    //     if (err) {
-    //         return res.status(500).send('File could not be saved');
-    //     }
-
-    //         res.status(200).send('uploaded');
-
-    // });
-    res.status(200).send('uploaded');
+    // Convert M4A to MP3 using fluent-ffmpeg
+    ffmpeg().input(inputFilePath).audioCodec('libmp3lame').toFormat('mp3').on('end', () => {
+        res.status(200).download(outputFilePath, 'output.mp3', err => {
+            if (err) {
+                console.error('Error while sending the converted file:', err);
+            }
+            // Clean up temporary files if needed
+            //fs.unlinkSync(inputFilePath); // Delete the original M4A file
+            //fs.unlinkSync(outputFilePath); // Delete the converted MP3 file
+            res.status(200).send('uploaded');
+        });
+    }).on('error', err => {
+        console.error('Error during conversion:', err);
+        res.status(500).send('Error during conversion');
+    }).save(outputFilePath);
 });
 
 app.listen(4000, () => console.log("Waiting on 4000 port."));

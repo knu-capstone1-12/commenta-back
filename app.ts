@@ -27,7 +27,31 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
     if(!req.file) {
         return res.status(400).send('Please Upload file');
     }
-    res.status(200).send('uploaded');
+
+    const inputFilePath = req.file.path;
+    const outputFilePath = path.join(__dirname, 'uploads', 'output.mp3');
+
+    ffmpeg()
+    .input(inputFilePath)
+    .audioCodec('libmp3lame')
+    .toFormat('mp3')
+    .on('end', () => {
+      res.status(200).download(outputFilePath, 'output.mp3', (err) => {
+        if (err) {
+          console.error('Error while sending the converted file:', err);
+        }
+        
+        //fs.unlinkSync(inputFilePath); // M4A 파일 삭제
+        res.status(200).send('uploaded');
+
+      });
+    })
+    .on('error', (err) => {
+      console.error('Error during conversion:', err);
+      res.status(500).send('Error during conversion');
+    })
+    .save(outputFilePath);
+    
 
 })
 
