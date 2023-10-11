@@ -28,17 +28,15 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
     }
 
     const inputFilePath = req.file.path;
-    const outputFilePath = path.join(__dirname, 'uploads', 'output.mp3');
+    const outputFilePath = path.join(__dirname, 'uploads', 'k215.mp3');
 
-    // Convert M4A to MP3 using fluent-ffmpeg
     ffmpeg().input(inputFilePath).audioCodec('libmp3lame').toFormat('mp3').on('end', () => {
-        res.status(200).download(outputFilePath, 'output.mp3', err => {
+        res.status(200).download(outputFilePath, 'k215.mp3', err => {
             if (err) {
                 console.error('Error while sending the converted file:', err);
             }
-            // Clean up temporary files if needed
-            //fs.unlinkSync(inputFilePath); // Delete the original M4A file
-            //fs.unlinkSync(outputFilePath); // Delete the converted MP3 file
+
+            //fs.unlinkSync(inputFilePath); // M4A 파일 삭제
             res.status(200).send('uploaded');
         });
     }).on('error', err => {
