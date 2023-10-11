@@ -28,10 +28,10 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
     }
 
     const inputFilePath = req.file.path;
-    const outputFilePath = path.join(__dirname, 'uploads', 'k215.mp3');
+    const outputFilePath = path.join(__dirname, 'uploads', 'output.mp3');
 
     ffmpeg().input(inputFilePath).audioCodec('libmp3lame').toFormat('mp3').on('end', () => {
-        res.status(200).download(outputFilePath, 'k215.mp3', err => {
+        res.status(200).download(outputFilePath, 'output.mp3', err => {
             if (err) {
                 console.error('Error while sending the converted file:', err);
             }
