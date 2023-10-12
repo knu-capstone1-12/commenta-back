@@ -3,8 +3,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
-const { GCStorage } = require('@google-cloud/storage');
-const { SpeechClient } = require('@google-cloud/speech');
 const upload = multer({storage: multer.diskStorage({
       	filename(req, file, done) {
           	console.log(file);
@@ -23,15 +21,48 @@ const SERVICE_KEY_FILE = './key.json';
 
 const AUDIO_FILE = './uploads/output.mp3';
 
-const storage = new GCStorage({projectId: PROJECT_ID, keyFilename: SERVICE_KEY_FILE});
-const speechClient = new SpeechClient();
-
 const BUCKET_NAME = 'bucket';
 
 const app = express();
 //Express Application Definition
 
+const speech = require('@google-cloud/speech');
+
+
+const client = new speech.SpeechClient();
+
+
+async function quickstart() {
+    // The path to the remote LINEAR16 file
+
+    const filename = './uploads/output.wav';
+
+    const gcsUri = 'gs://cloud-samples-data/speech/brooklyn_bridge.raw';
+
+    // The audio file's encoding, sample rate in hertz, and BCP-47 language code
+    const audio = {
+      content: fs.readFileSync(filename).toString('base64'),
+    };
+    const config = {
+      encoding: 'LINEAR16',
+      sampleRateHertz: 44100,
+      languageCode: 'en-US',
+    };
+    const request = {
+      audio: audio,
+      config: config,
+    };
+
+    // Detects speech in the audio file
+    const [response] = await client.recognize(request);
+    const transcription = response.results
+      .map(result => result.alternatives[0].transcript)
+      .join('\n');
+    console.log(`Transcription: ${transcription}`);
+  }
+
 app.get('/', (req, res) => {
+    quickstart();
     res.send("Hello, World!");
 })
 
@@ -41,14 +72,14 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
     }
 
     const inputFilePath = req.file.path;
-    const outputFilePath = path.join(__dirname, 'uploads', 'output.mp3');
+    const outputFilePath = path.join(__dirname, 'uploads', 'output.wav');
 
     ffmpeg()
     .input(inputFilePath)
-    .audioCodec('libmp3lame')
-    .toFormat('mp3')
+    .audioCodec('pcm_s16le')
+    .toFormat('wav')
     .on('end', () => {
-      res.status(200).download(outputFilePath, 'output.mp3', (err) => {
+      res.status(200).download(outputFilePath, 'output.wav', (err) => {
         if (err) {
           console.error('Error while sending the converted file:', err);
         }
@@ -56,7 +87,7 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
         //Upload 완료 후 Google GCP API Call 구현 예정
         
         //fs.unlinkSync(inputFilePath); // M4A 파일 삭제
-        res.status(200).send('uploaded');
+        //res.status(200).send('uploaded');
 
       });
     })
