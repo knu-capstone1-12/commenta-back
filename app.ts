@@ -3,6 +3,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
+const { GCStorage } = require('@google-cloud/storage');
+const { SpeechClient } = require('@google-cloud/speech');
 const upload = multer({storage: multer.diskStorage({
       	filename(req, file, done) {
           	console.log(file);
@@ -15,6 +17,16 @@ const upload = multer({storage: multer.diskStorage({
     }),}
     );
 //Express Load
+
+const PROJECT_ID = 'diarystt';
+const SERVICE_KEY_FILE = './key.json';
+
+const AUDIO_FILE = './uploads/output.mp3';
+
+const storage = new GCStorage({projectId: PROJECT_ID, keyFilename: SERVICE_KEY_FILE});
+const speechClient = new SpeechClient();
+
+const BUCKET_NAME = 'bucket';
 
 const app = express();
 //Express Application Definition
@@ -40,6 +52,8 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
         if (err) {
           console.error('Error while sending the converted file:', err);
         }
+        
+        //Upload 완료 후 Google GCP API Call 구현 예정
         
         //fs.unlinkSync(inputFilePath); // M4A 파일 삭제
         res.status(200).send('uploaded');
