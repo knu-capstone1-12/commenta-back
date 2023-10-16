@@ -29,6 +29,8 @@ const speech = require('@google-cloud/speech');
 
 const client = new speech.SpeechClient();
 
+let Transcription = null;
+
 async function quickstart() {
   // The path to the remote LINEAR16 file
 
@@ -54,6 +56,7 @@ async function quickstart() {
   const [response] = await client.recognize(request);
   const transcription = response.results.map(result => result.alternatives[0].transcript).join('\n');
   console.log(`Transcription: ${transcription}`);
+  return transcription;
 }
 
 app.get('/', (req, res) => {
@@ -70,16 +73,22 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
   const outputFilePath = path.join(__dirname, 'uploads', 'output.wav');
 
   ffmpeg().input(inputFilePath).audioCodec('pcm_s16le').toFormat('wav').on('end', () => {
-    res.status(200).download(outputFilePath, 'output.wav', err => {
-      if (err) {
-        console.error('Error while sending the converted file:', err);
-      }
+    // res.status(200).download(outputFilePath, 'output.wav', (err) => {
+    //   if (err) {
+    //     console.error('Error while sending the converted file:', err);
+    //   }
+    //   let Transcription = quickstart();
+    //   res.send(Transcription);
+    //   //Upload 완료 후 Google GCP API Call 구현 예정
 
-      //Upload 완료 후 Google GCP API Call 구현 예정
+    //   //fs.unlinkSync(inputFilePath); // M4A 파일 삭제
+    //   //res.status(200).send('uploaded');
 
-      //fs.unlinkSync(inputFilePath); // M4A 파일 삭제
-      //res.status(200).send('uploaded');
+    // });
+    quickstart().then(function (trans) {
+      res.send(trans);
     });
+    //res.send(trans);
   }).on('error', err => {
     console.error('Error during conversion:', err);
     res.status(500).send('Error during conversion');
