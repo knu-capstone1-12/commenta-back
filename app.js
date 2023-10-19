@@ -86,7 +86,7 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
 
     // });
     quickstart().then(function (trans) {
-      res.send(trans);
+      res.json({ text: trans });
     });
     //res.send(trans);
   }).on('error', err => {
