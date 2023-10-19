@@ -72,7 +72,7 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
   const inputFilePath = req.file.path;
   const outputFilePath = path.join(__dirname, 'uploads', 'output.wav');
 
-  ffmpeg().input(inputFilePath).audioCodec('pcm_s16le').toFormat('wav').on('end', () => {
+  ffmpeg().input(inputFilePath).audioFilters('asetrate=48000').audioCodec('pcm_s16le').toFormat('wav').on('end', () => {
     // res.status(200).download(outputFilePath, 'output.wav', (err) => {
     //   if (err) {
     //     console.error('Error while sending the converted file:', err);
