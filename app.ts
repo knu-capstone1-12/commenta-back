@@ -46,7 +46,7 @@ async function quickstart() {
     };
     const config = {
       encoding: 'LINEAR16',
-      sampleRateHertz: 44100,
+      sampleRateHertz: 48000,
       languageCode: 'en-US',
     };
     const request = {
