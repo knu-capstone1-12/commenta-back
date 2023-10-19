@@ -78,6 +78,7 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
 
     ffmpeg()
     .input(inputFilePath)
+    .audioFilters('asetrate=48000')
     .audioCodec('pcm_s16le')
     .toFormat('wav')
     .on('end', () => {
