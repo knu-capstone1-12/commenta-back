@@ -47,7 +47,7 @@ async function quickstart() {
     const config = {
       encoding: 'LINEAR16',
       sampleRateHertz: 48000,
-      languageCode: 'en-US',
+      languageCode: 'ko-KR',
     };
     const request = {
       audio: audio,
