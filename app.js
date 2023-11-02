@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const ffmpeg = require('fluent-ffmpeg');
+const os = require('os');
 const upload = multer({ storage: multer.diskStorage({
     filename(req, file, done) {
       console.log(file);
@@ -76,24 +77,33 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
   const { TranscribeClient } = require("@aws-sdk/client-transcribe");
   const REGION = "ap-northeast-2";
   const transcribeClient = new TranscribeClient({ region: REGION });
-  // Set the parameters
+
+  const timestampFilePath = 'Timestamp.txt';
+  const timestampValue = Date.now().toString(); // 원하는 값을 사용
+  fs.writeFileSync(timestampFilePath, timestampValue, 'utf-8');
+
+  const rtimestampFilePath = 'Timestamp.txt';
+  const Timestamp = fs.readFileSync(rtimestampFilePath, 'utf-8');
+
+  // Transcribe Input 파라미터 설정(S3 Bucket에서 입력합니다)
   const params = {
     TranscriptionJobName: "DIARY_JOB",
     LanguageCode: "ko-KR", // For example, 'en-US'
     MediaFormat: "wav", // For example, 'wav'
     Media: {
-      MediaFileUri: "https://capstond-diary.s3.ap-northeast-2.amazonaws.com/record.wav"
-      // For example, "https://transcribe-demo.s3-REGION.amazonaws.com/hello_world.wav"
+      MediaFileUri: "https://capstond-diary.s3.ap-northeast-2.amazonaws.com/record.wav" + Timestamp
     },
     OutputBucketName: "capstond-output"
   };
 
   const run = async () => {
     try {
+
       const data = await transcribeClient.send(new StartTranscriptionJobCommand(params));
       console.log("Success - put", data.TranscriptionJobSummaries);
 
       return data; // For unit tests.
+
     } catch (err) {
       console.log("Error", err);
     }
@@ -103,40 +113,24 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
     TranscriptionJobName: "DIARY_JOB"
   };
   const delete_run = async () => {
-    // try {
-    //   const data = await transcribeClient.send(
-    //     new DeleteTranscriptionJobCommand(del_params)
-    //   );
-    //   console.log("Success - deleted");
-    //   return data; // For unit tests.
-    // } catch (err) {
-    //   console.log("Error", err);
-    // }
 
     try {
-      // Check if the job exists and get its status
-      const response = await transcribeClient.send(new GetTranscriptionJobCommand(del_params));
-      const jobStatus = response.TranscriptionJob.TranscriptionJobStatus;
-
-      if (jobStatus === 'COMPLETED' || jobStatus === 'FAILED') {
-        // Job is completed or failed, so it can be deleted
-        const deleteResponse = await transcribeClient.send(new DeleteTranscriptionJobCommand(del_params));
-        console.log('Success - deleted', deleteResponse);
-      } else {
-        console.error('Job is not in a deletable state');
-      }
-    } catch (error) {
-      console.error('Error', error);
+      const data = await transcribeClient.send(new DeleteTranscriptionJobCommand(del_params));
+      console.log("Success - deleted");
+      return data; // For unit tests.
+    } catch (err) {
+      console.log("Error", err);
     }
   };
 
   AWS.config.update({
     region: process.env.REGION,
     accessKeyId: process.env.ACCESSKEYID,
-    secretAccessKey: process.env.SECRETACCESSKEY
+    secretAccessKey: process.env.SECRETACCESSKEY,
+    retryDelayOptions: { base: 300 }
   });
 
-  const s3 = new AWS.S3();
+  const s3 = new AWS.S3({ maxRetries: 10 });
 
   if (!req.file) {
     return res.status(400).send('Please Upload file');
@@ -159,24 +153,42 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
 
     // });
 
-    //AWS Transcribe API 작성 예정
+    //AWS Transcribe API
 
     const AWSfilePath = './uploads/output.wav';
 
     const params = {
       Bucket: 'capstond-diary',
-      Key: 'record.wav',
+      Key: 'record.wav' + Timestamp,
       Body: fs.createReadStream(AWSfilePath)
     };
 
-    delete_run();
-    s3.upload(params, (err, data) => {
-      if (err) {
-        console.error('An Error occured while uploading', err);
-      } else {
-        console.log('Upload Complete(AWS)', data.Location);
-        //res.json({'location': data.Location});
-        run();
+    delete_run().then(() => {
+      s3.deleteObject({ Bucket: "capstond-diary", Key: "record.wav" }, (err, data) => {
+        if (err) {
+          console.error('Error deleting object:', err);
+        } else {
+          console.log('Successfully deleted object:', data);
+        }
+      });
+    }).then(() => {
+      s3.deleteObject({ Bucket: "capstond-output", Key: "DIARY_JOB.json" });
+    }).then(() => {
+      s3.upload(params, (err, data) => {
+        if (err) {
+          console.error('An Error occured while uploading', err);
+        } else {
+          console.log('Upload Complete(AWS)', data.Location);
+          //res.json({'location': data.Location});
+
+          run();
+        }
+      });
+    });
+    setTimeout(() => {
+      console.log("DIARY_JOB" + Timestamp + ".json");
+      console.log("DIARY_JOB" + Timestamp);
+      setTimeout(() => {
 
         s3.getObject({ Bucket: "capstond-output", Key: "DIARY_JOB.json" }, (err, data) => {
           if (err) {
@@ -194,10 +206,17 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
             }
           }
         });
-      }
-    });
+      }, 5000);
+    }, 5000);
 
-    //res.send(trans);
+    //     s3.deleteObject({Bucket: "capstond-output", Key: "DIARY_JOB.json"}, (err, data) => {
+    //   if (err) {
+    //     console.error('Error deleting object:', err);
+    //   } else {
+    //     console.log('Successfully deleted object:', data);
+    //   }
+    // });
+
   }).on('error', err => {
     console.error('Error during conversion:', err);
     res.status(500).send('Error during conversion');
