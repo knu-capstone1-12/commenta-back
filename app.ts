@@ -16,6 +16,11 @@ const upload = multer({storage: multer.diskStorage({
     );
 //Express Load
 
+const AWS = require('aws-sdk');
+const CRT = require('./transcript-create-job');
+
+
+
 const PROJECT_ID = 'diarystt';
 const SERVICE_KEY_FILE = './key.json';
 
@@ -69,7 +74,72 @@ app.get('/', (req, res) => {
 })
 
 
+
 app.post('/sttaws', upload.single('audio'), (req, res) => {
+    require('dotenv').config();
+    const { StartTranscriptionJobCommand }  = require("@aws-sdk/client-transcribe");
+    const { DeleteTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
+    const { GetTranscriptionJobCommand } = require('@aws-sdk/client-transcribe');
+
+    const { TranscribeClient } = require("@aws-sdk/client-transcribe");
+    const REGION = "ap-northeast-2";
+    const transcribeClient = new TranscribeClient({ region: REGION });
+
+    // Transcribe Input 파라미터 설정(S3 Bucket에서 입력합니다)
+    const params = {
+    TranscriptionJobName: "DIARY_JOB",
+    LanguageCode: "ko-KR", // For example, 'en-US'
+    MediaFormat: "wav", // For example, 'wav'
+    Media: {
+      MediaFileUri: "https://capstond-diary.s3.ap-northeast-2.amazonaws.com/record.wav",
+    },
+    OutputBucketName: "capstond-output"
+};
+
+const run = async () => {
+  try {
+    const data = await transcribeClient.send(
+      new StartTranscriptionJobCommand(params)
+    );
+    console.log("Success - put", data.TranscriptionJobSummaries);
+
+    return data; // For unit tests.
+  } catch (err) {
+    console.log("Error", err);
+  }
+};
+
+const del_params = {
+  TranscriptionJobName: "DIARY_JOB",
+};
+const delete_run = async () => {
+
+    try {
+    // Check if the job exists and get its status
+    const response = await transcribeClient.send(new GetTranscriptionJobCommand(del_params));
+    const jobStatus = response.TranscriptionJob.TranscriptionJobStatus;
+
+    if (jobStatus === 'COMPLETED' || jobStatus === 'FAILED') {
+      // Job is completed or failed, so it can be deleted
+      const deleteResponse = await transcribeClient.send(new DeleteTranscriptionJobCommand(del_params));
+      console.log('Success - deleted', deleteResponse);
+    } else {
+      console.error('Job is not in a deletable state');
+    }
+  } catch (error) {
+    console.error('Error', error);
+  }
+
+};
+
+    AWS.config.update({
+      region: process.env.REGION,
+      accessKeyId: process.env.ACCESSKEYID,
+      secretAccessKey: process.env.SECRETACCESSKEY,
+    });
+
+    const s3 = new AWS.S3();
+
     if(!req.file) {
         return res.status(400).send('Please Upload file');
     }
@@ -96,9 +166,46 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
 
       // });
       
-      //AWS Transcribe API 작성 예정
+      //AWS Transcribe API
 
-      //res.send(trans);
+      const AWSfilePath = './uploads/output.wav';
+      
+      const params = {
+        Bucket: 'capstond-diary',
+        Key: 'record.wav',
+        Body: fs.createReadStream(AWSfilePath),
+      }
+
+      delete_run();
+      s3.upload(params, (err, data) => {
+        if (err) {
+          console.error('An Error occured while uploading', err);
+        } else {
+          console.log('Upload Complete(AWS)', data.Location);
+          //res.json({'location': data.Location});
+          run();
+          
+      s3.getObject({ Bucket: "capstond-output", Key: "DIARY_JOB.json" }, (err, data) => {
+      if (err) {
+        console.error('파일을 가져올 수 없습니다:', err);
+      } else {
+        const jsonContent = data.Body.toString('utf-8'); // JSON 파일 내용을 문자열로 변환
+
+        try {
+          const jsonData = JSON.parse(jsonContent); // JSON 문자열을 JavaScript 객체로 파싱
+          console.log('JSON 데이터:', jsonData.results.transcripts[0].transcript);
+          res.json({"text": jsonData.results.transcripts[0].transcript});
+        } catch (parseError) {
+          console.error('JSON 파싱 오류:', parseError);
+          res.status(500).send('JSON parse Error');
+          
+
+        }
+      }
+    });
+          
+    }
+  })
     })
     .on('error', (err) => {
       console.error('Error during conversion:', err);
