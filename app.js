@@ -87,7 +87,7 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
 
   // Transcribe Input 파라미터 설정(S3 Bucket에서 입력합니다)
   const params = {
-    TranscriptionJobName: "DIARY_JOB",
+    TranscriptionJobName: "DIARY_JOB" + Timestamp,
     LanguageCode: "ko-KR", // For example, 'en-US'
     MediaFormat: "wav", // For example, 'wav'
     Media: {
@@ -164,15 +164,15 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
     };
 
     delete_run().then(() => {
-      s3.deleteObject({ Bucket: "capstond-diary", Key: "record.wav" }, (err, data) => {
-        if (err) {
-          console.error('Error deleting object:', err);
-        } else {
-          console.log('Successfully deleted object:', data);
-        }
-      });
+      //            s3.deleteObject({Bucket: "capstond-diary", Key: "record.wav"}, (err, data) => {
+      //   if (err) {
+      //     console.error('Error deleting object:', err);
+      //   } else {
+      //     console.log('Successfully deleted object:', data);
+      //   }
+      // });
     }).then(() => {
-      s3.deleteObject({ Bucket: "capstond-output", Key: "DIARY_JOB.json" });
+      //s3.deleteObject({Bucket: "capstond-output", Key: "DIARY_JOB"+Timestamp+".json"})
     }).then(() => {
       s3.upload(params, (err, data) => {
         if (err) {
@@ -190,7 +190,7 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
       console.log("DIARY_JOB" + Timestamp);
       setTimeout(() => {
 
-        s3.getObject({ Bucket: "capstond-output", Key: "DIARY_JOB.json" }, (err, data) => {
+        s3.getObject({ Bucket: "capstond-output", Key: "DIARY_JOB" + Timestamp + ".json" }, (err, data) => {
           if (err) {
             console.error('파일을 가져올 수 없습니다:', err);
           } else {
@@ -206,8 +206,8 @@ app.post('/sttaws', upload.single('audio'), (req, res) => {
             }
           }
         });
-      }, 5000);
-    }, 5000);
+      }, 10000);
+    }, 500);
 
     //     s3.deleteObject({Bucket: "capstond-output", Key: "DIARY_JOB.json"}, (err, data) => {
     //   if (err) {
