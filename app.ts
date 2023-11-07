@@ -16,6 +16,8 @@ const upload = multer({storage: multer.diskStorage({
     }),}
     );
 //Express Load
+const request = require('request');
+const bodyParser = require("body-parser");
 
 const AWS = require('aws-sdk');
 const CRT = require('./transcript-create-job');
@@ -31,7 +33,8 @@ const BUCKET_NAME = 'bucket';
 
 const app = express();
 //Express Application Definition
-
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 const speech = require('@google-cloud/speech');
 
 
@@ -306,6 +309,33 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
     
 
 })
+
+app.post('/senceemotion', (req, res) => {
+    console.log("====== Incoming Connection (/senceemotion) ====");
+    console.log("JSON Request Body: "+JSON.stringify(req.body));
+    const options = {
+        uri:'https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze',
+        method: 'POST',
+        headers: {
+          "Content-Type" : "application/json",
+          "X-NCP-APIGW-API-KEY-ID" : "b9enebt34x",
+          "X-NCP-APIGW-API-KEY" : "HrM8FG5bJiKxaQurn5kd13dKu0JPim5EBegoUfXD"
+        },
+        body: {
+            content: req.body.content
+        },
+        json:true
+    }
+
+    request.post(options, function (error, response, body) {
+      console.log("Confidence of Document(Body of Response): "+JSON.stringify(response.body.document.confidence));
+      res.json(response.body.document.confidence);
+      console.log("===== Response Complete =======");
+    }); 
+
+
+});
+
 
 app.listen(4000, () => console.log("Waiting on 4000 port."));
 
