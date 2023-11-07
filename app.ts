@@ -311,6 +311,7 @@ app.post('/sttrec', upload.single('audio'), (req, res) => {
 })
 
 app.post('/senceemotion', (req, res) => {
+    require('dotenv').config();
     console.log("====== Incoming Connection (/senceemotion) ====");
     console.log("JSON Request Body: "+JSON.stringify(req.body));
     const options = {
@@ -318,8 +319,8 @@ app.post('/senceemotion', (req, res) => {
         method: 'POST',
         headers: {
           "Content-Type" : "application/json",
-          "X-NCP-APIGW-API-KEY-ID" : "b9enebt34x",
-          "X-NCP-APIGW-API-KEY" : "HrM8FG5bJiKxaQurn5kd13dKu0JPim5EBegoUfXD"
+          "X-NCP-APIGW-API-KEY-ID" : process.env.NCPID,
+          "X-NCP-APIGW-API-KEY" : process.env.NCPKEY
         },
         body: {
             content: req.body.content
