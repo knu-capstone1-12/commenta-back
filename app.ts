@@ -317,7 +317,23 @@ app.post("/senceemotion", (req, res) => {
       "Confidence of Document(Body of Response): " +
         JSON.stringify(response.body.document.confidence)
     );
-    res.json(response.body.document.confidence);
+    const jsonBody = response.body.document;
+    var emotionScore;
+    if (jsonBody.sentiment == "positive") {
+      emotionScore = 1;
+      emotionScore =
+        emotionScore +
+        (jsonBody.confidence.positive - jsonBody.confidence.negative) / 50;
+    } else if (jsonBody.sentiment == "negative") {
+      emotionScore = -1;
+      emotionScore =
+        emotionScore +
+        (jsonBody.confidence.positive - jsonBody.confidence.negative) / 50;
+    } else {
+      emotionScore = 0;
+    } //(1 | 0 | -1) + 2*(긍정 - 부정)
+    res.json({ emotionScore: emotionScore });
+    console.log("Emotion Score: " + emotionScore);
     console.log("===== Response Complete =======");
   });
 });
