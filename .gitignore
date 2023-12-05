@@ -146,3 +146,6 @@ dist
 
 # Timestamp Temp File 제외
 Timestamp.txt
+
+#GCP Key file
+key.json
