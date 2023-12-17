@@ -5,7 +5,7 @@ const path_AWS = require("path");
 const fs_AWS = require("fs");
 const ffmpeg_AWS = require("fluent-ffmpeg");
 const dotenv = require("dotenv");
-dotenv.config();
+require("dotenv").config();
 
 const upload_AWS = multer_AWS({
   storage: multer_AWS.diskStorage({

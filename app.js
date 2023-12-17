@@ -3,6 +3,7 @@ const os = require("os");
 const GoogleCloud = require("./routes/GoogleCloud");
 const EmotionAnalyze = require("./routes/EmotionAnalyze");
 const AmazonTranscribe = require("./routes/AmazonTranscribe");
+const GPTAPI = require("./routes/GPTAPI");
 const bodyParser = require("body-parser");
 
 //Express Load
@@ -226,6 +227,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.post("/sttrec", GoogleCloud);
 app.post("/senceemotion", EmotionAnalyze);
 app.post("/sttaws", AmazonTranscribe);
+app.post("/gptanalyze", GPTAPI);
 
 // app.post("/sttrec", upload.single("audio"), (req, res) => {
 //   if (!req.file) {
