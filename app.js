@@ -1,20 +1,21 @@
 const express = require("express");
 const os = require("os");
 const GoogleCloud = require("./routes/GoogleCloud");
+const EmotionAnalyze = require("./routes/EmotionAnalyze");
+const AmazonTranscribe = require("./routes/AmazonTranscribe");
 const bodyParser = require("body-parser");
 
 //Express Load
-const request = require("request");
 
-const AWS = require("aws-sdk");
-const CRT = require("./transcript-create-job");
+// const AWS = require("aws-sdk");
+// const CRT = require("./transcript-create-job");
 
-const PROJECT_ID = "diarystt";
-const SERVICE_KEY_FILE = "./key.json";
+// const PROJECT_ID = "diarystt";
+// const SERVICE_KEY_FILE = "./key.json";
 
-const AUDIO_FILE = "./uploads/output.mp3";
+// const AUDIO_FILE = "./uploads/output.mp3";
 
-const BUCKET_NAME = "bucket";
+// const BUCKET_NAME = "bucket";
 
 const app = express();
 //Express Application Definition
@@ -22,8 +23,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 //const client = new speech.SpeechClient();
-
-let Transcription = null;
 
 // app.get("/", (req, res) => {
 //   quickstart();
@@ -225,6 +224,9 @@ let Transcription = null;
 // });
 
 app.post("/sttrec", GoogleCloud);
+app.post("/senceemotion", EmotionAnalyze);
+app.post("/sttaws", AmazonTranscribe);
+
 // app.post("/sttrec", upload.single("audio"), (req, res) => {
 //   if (!req.file) {
 //     return res.status(400).send("Please Upload file");
@@ -263,41 +265,48 @@ app.post("/sttrec", GoogleCloud);
 //     .save(outputFilePath);
 // });
 
-app.post("/senceemotion", (req, res) => {
-  require("dotenv").config();
-  console.log("====== Incoming Connection (/senceemotion) ====");
-  console.log("JSON Request Body: " + JSON.stringify(req.body));
-  const options = {
-    uri: "https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze",
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-NCP-APIGW-API-KEY-ID": process.env.NCPID,
-      "X-NCP-APIGW-API-KEY": process.env.NCPKEY
-    },
-    body: {
-      content: req.body.content
-    },
-    json: true
-  };
+// app.post("/senceemotion", (req, res) => {
+//   require("dotenv").config();
+//   console.log("====== Incoming Connection (/senceemotion) ====");
+//   console.log("JSON Request Body: " + JSON.stringify(req.body));
+//   const options = {
+//     uri: "https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze",
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//       "X-NCP-APIGW-API-KEY-ID": process.env.NCPID,
+//       "X-NCP-APIGW-API-KEY": process.env.NCPKEY,
+//     },
+//     body: {
+//       content: req.body.content,
+//     },
+//     json: true,
+//   };
 
-  request.post(options, function (error, response, body) {
-    console.log("Confidence of Document(Body of Response): " + JSON.stringify(response.body.document.confidence));
-    const jsonBody = response.body.document;
-    var emotionScore;
-    if (jsonBody.sentiment == "positive") {
-      emotionScore = 1;
-      emotionScore = emotionScore + (jsonBody.confidence.positive - jsonBody.confidence.negative) / 50;
-    } else if (jsonBody.sentiment == "negative") {
-      emotionScore = -1;
-      emotionScore = emotionScore + (jsonBody.confidence.positive - jsonBody.confidence.negative) / 50;
-    } else {
-      emotionScore = 0;
-    } //(1 | 0 | -1) + 2*(긍정 - 부정)
-    res.json({ emotionScore: emotionScore });
-    console.log("Emotion Score: " + emotionScore);
-    console.log("===== Response Complete =======");
-  });
-});
+//   request.post(options, function (error, response, body) {
+//     console.log(
+//       "Confidence of Document(Body of Response): " +
+//         JSON.stringify(response.body.document.confidence)
+//     );
+//     const jsonBody = response.body.document;
+//     var emotionScore;
+//     if (jsonBody.sentiment == "positive") {
+//       emotionScore = 1;
+//       emotionScore =
+//         emotionScore +
+//         (jsonBody.confidence.positive - jsonBody.confidence.negative) / 50;
+//     } else if (jsonBody.sentiment == "negative") {
+//       emotionScore = -1;
+//       emotionScore =
+//         emotionScore +
+//         (jsonBody.confidence.positive - jsonBody.confidence.negative) / 50;
+//     } else {
+//       emotionScore = 0;
+//     } //(1 | 0 | -1) + 2*(긍정 - 부정)
+//     res.json({ emotionScore: emotionScore });
+//     console.log("Emotion Score: " + emotionScore);
+//     console.log("===== Response Complete =======");
+//   });
+// });
 
 app.listen(4000, () => console.log("Waiting on 4000 port."));
