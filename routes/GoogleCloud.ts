@@ -51,6 +51,7 @@ router.post("/sttrec", upload_Google.single("audio"), (req, res) => {
   if (!req.file) {
     return res.status(400).send("Please Upload file");
   }
+  console.log("====== Incoming Connection (/sttrec) ====");
 
   const inputFilePath = req.file.path;
   const outputFilePath = path.join(__dirname, "../uploads", "output.wav");

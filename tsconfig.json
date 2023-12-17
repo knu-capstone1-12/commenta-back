@@ -1,8 +1,9 @@
 {
-    "compilerOptions": {
-        "module": "CommonJS",
-        "target": "es6",
-        "sourceMap": false,
-    },
-    "exclude": ["node_modules"]
+  "compilerOptions": {
+    "target": "es6",
+    "rootDir": "./"
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules"],
+  "watch": true
 }

@@ -6,6 +6,7 @@ const GoogleCloud = require("./routes/GoogleCloud");
 const EmotionAnalyze = require("./routes/EmotionAnalyze");
 const AmazonTranscribe = require("./routes/AmazonTranscribe");
 const GPTAPI = require("./routes/GPTAPI");
+const GPTNormalAPI = require('./routes/GPTConnectNormal');
 const bodyParser = require("body-parser");
 
 //Express Load
@@ -230,6 +231,7 @@ app.post("/sttrec", GoogleCloud);
 app.post("/senceemotion", EmotionAnalyze);
 app.post("/sttaws", AmazonTranscribe);
 app.post("/gptanalyze", GPTAPI);
+app.post("/gptnormal", GPTNormalAPI);
 
 // app.post("/sttrec", upload.single("audio"), (req, res) => {
 //   if (!req.file) {
