@@ -1,9 +1,10 @@
-require("dotenv").config();
+const dotenvGPT = require("dotenv");
+dotenvGPT.config();
 const GPTrouter = require("express").Router();
 const OpenAI = require("openai");
 
 const openai = new OpenAI({
-  apiKey: "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"
+  apiKey: process.env.OPENAI_API_KEY
 });
 
 const runPrompt = async UserComment => {
@@ -32,6 +33,7 @@ const runPrompt = async UserComment => {
 };
 
 GPTrouter.post("/gptanalyze", async (req, res) => {
+  console.log(process.env.OPENAI_API_KEY);
   let GPTresult = await runPrompt(req.body.content);
   res.json({ text: GPTresult });
 });

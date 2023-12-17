@@ -1,15 +1,14 @@
-const dotenvGPT = require("dotenv");
-dotenvGPT.config();
-const GPTrouter = require("express").Router();
-const OpenAI = require("openai");
+require("dotenv");
+const GPTNormalrouter = require("express").Router();
+const OpenAINormal = require("openai");
 
-const openai = new OpenAI({
+const openaiNormal = new OpenAINormal({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const runPrompt = async (UserComment) => {
+const runPromptNormal = async (UserComment) => {
   try {
-    const response = await openai.chat.completions.create({
+    const response = await openaiNormal.chat.completions.create({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -37,7 +36,7 @@ const runPrompt = async (UserComment) => {
   }
 };
 
-GPTrouter.post("/gptanalyze", async (req, res) => {
+GPTNormalrouter.post("/gptanalyze", async (req, res) => {
   console.log(process.env.OPENAI_API_KEY);
   let GPTresult = await runPrompt(req.body.content);
   res.json({ text: GPTresult });
