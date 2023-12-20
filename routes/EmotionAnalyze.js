@@ -1,10 +1,12 @@
-const router_Emotion = require("express").Router();
-const request = require("request");
-router_Emotion.post("/senceemotion", (req, res) => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var router = require("../utils/ExternalUtils").router;
+var request = require("../utils/ExternalUtils").request;
+router.post("/senceemotion", function (req, res) {
     require("dotenv").config();
     console.log("====== Incoming Connection (/senceemotion) ====");
     console.log("JSON Request Body: " + JSON.stringify(req.body));
-    const options = {
+    var options = {
         uri: "https://naveropenapi.apigw.ntruss.com/sentiment-analysis/v1/analyze",
         method: "POST",
         headers: {
@@ -20,7 +22,7 @@ router_Emotion.post("/senceemotion", (req, res) => {
     request.post(options, function (error, response, body) {
         console.log("Confidence of Document(Body of Response): " +
             JSON.stringify(response.body.document.confidence));
-        const jsonBody = response.body.document;
+        var jsonBody = response.body.document;
         var emotionScore;
         if (jsonBody.sentiment == "positive") {
             emotionScore =
@@ -38,4 +40,4 @@ router_Emotion.post("/senceemotion", (req, res) => {
         console.log("===== Response Complete =======");
     });
 });
-module.exports = router_Emotion;
+module.exports = router;

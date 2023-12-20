@@ -1,7 +1,7 @@
-const dotenvGPT = require("dotenv");
-dotenvGPT.config();
-const GPTrouter = require("express").Router();
-const OpenAI = require("openai");
+const dotenv = require("dotenv");
+dotenv.config();
+const router = require("../utils/ExternalUtils").router;
+const OpenAI = require("../utils/ExternalUtils").OpenAI;
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -73,7 +73,7 @@ const analyzetoScoreCalc = async (UserComment: string) => {
   }
 };
 
-GPTrouter.post("/gptanalyze", async (req, res) => {
+router.post("/gptanalyze", async (req, res) => {
   console.log("====== Incoming Connection (/gptanalyze) ====");
   console.log("Connecting with API Key: " + process.env.OPENAI_API_KEY);
   let GPTresult = await analyzetoText(req.body.content);
@@ -81,7 +81,7 @@ GPTrouter.post("/gptanalyze", async (req, res) => {
   console.log("===== Response Complete =======");
 });
 
-GPTrouter.post("/gptscore", async (req, res) => {
+router.post("/gptscore", async (req, res) => {
   console.log("====== Incoming Connection (/gptscore) ====");
   console.log("Connecting with API Key: " + process.env.OPENAI_API_KEY);
   let GPTScoreResult = await analyzetoScoreCalc(req.body.content);
@@ -90,4 +90,4 @@ GPTrouter.post("/gptscore", async (req, res) => {
   console.log("===== Response Complete =======");
 });
 
-module.exports = GPTrouter;
+module.exports = router;

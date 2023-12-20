@@ -1,7 +1,7 @@
-const router_Emotion = require("express").Router();
-const request = require("request");
+const router = require("../utils/ExternalUtils").router;
+const request = require("../utils/ExternalUtils").request;
 
-router_Emotion.post("/senceemotion", (req, res) => {
+router.post("/senceemotion", (req, res) => {
   require("dotenv").config();
   console.log("====== Incoming Connection (/senceemotion) ====");
   console.log("JSON Request Body: " + JSON.stringify(req.body));
@@ -41,4 +41,4 @@ router_Emotion.post("/senceemotion", (req, res) => {
   });
 });
 
-module.exports = router_Emotion;
+module.exports = router;

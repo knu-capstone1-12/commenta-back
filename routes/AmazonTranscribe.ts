@@ -1,25 +1,32 @@
-const router_AWS = require("express").Router();
-const AWS = require("aws-sdk");
-const multer_AWS = require("multer");
-const path_AWS = require("path");
-const fs_AWS = require("fs");
-const ffmpeg_AWS = require("fluent-ffmpeg");
-require("dotenv").config();
+const dotenv = require("dotenv");
+dotenv.config();
+const router = require("../utils/ExternalUtils").router;
+const AWS = require("../utils/ExternalUtils").AWS;
+const multer = require("../utils/ExternalUtils").multer;
+const path = require("../utils/ExternalUtils").path;
+const fs = require("../utils/ExternalUtils").fs;
+const ffmpeg = require("../utils/ExternalUtils").ffmpeg;
 
-const upload_AWS = multer_AWS({
-  storage: multer_AWS.diskStorage({
+const upload_AWS = multer({
+  storage: multer.diskStorage({
     filename(req, file, done) {
       console.log(file);
       done(null, file.originalname);
     },
     destination(req, file, done) {
       console.log(file);
-      done(null, path_AWS.join(__dirname, "../uploads"));
+      done(null, path.join(__dirname, "../uploads"));
     },
   }),
 });
-router_AWS.post("/sttaws", upload_AWS.single("audio"), (req, res) => {
+router.post("/sttaws", upload_AWS.single("audio"), (req, res) => {
   require("dotenv").config();
+  AWS.config.update({
+    region: process.env.REGION,
+    accessKeyId: process.env.ACCESSKEYID,
+    secretAccessKey: process.env.SECRETACCESSKEY,
+    retryDelayOptions: { base: 300 },
+  });
   console.log("====== Incoming Connection (/sttaws) ====");
   const {
     StartTranscriptionJobCommand,
@@ -34,10 +41,10 @@ router_AWS.post("/sttaws", upload_AWS.single("audio"), (req, res) => {
 
   const timestampFilePath = "Timestamp.txt";
   const timestampValue = Date.now().toString();
-  fs_AWS.writeFileSync(timestampFilePath, timestampValue, "utf-8");
+  fs.writeFileSync(timestampFilePath, timestampValue, "utf-8");
 
   const rtimestampFilePath = "Timestamp.txt";
-  const Timestamp = fs_AWS.readFileSync(rtimestampFilePath, "utf-8");
+  const Timestamp = fs.readFileSync(rtimestampFilePath, "utf-8");
 
   // Transcribe Input 파라미터 설정(S3 Bucket에서 입력합니다)
   const params = {
@@ -80,13 +87,6 @@ router_AWS.post("/sttaws", upload_AWS.single("audio"), (req, res) => {
     }
   };
 
-  AWS.config.update({
-    region: process.env.REGION,
-    accessKeyId: process.env.ACCESSKEYID,
-    secretAccessKey: process.env.SECRETACCESSKEY,
-    retryDelayOptions: { base: 300 },
-  });
-
   const s3 = new AWS.S3({ maxRetries: 10 });
 
   if (!req.file) {
@@ -94,9 +94,9 @@ router_AWS.post("/sttaws", upload_AWS.single("audio"), (req, res) => {
   }
 
   const inputFilePath = req.file.path;
-  const outputFilePath = path_AWS.join(__dirname, "../uploads", "output.wav");
+  const outputFilePath = path.join(__dirname, "../uploads", "output.wav");
 
-  ffmpeg_AWS()
+  ffmpeg()
     .input(inputFilePath)
     .audioFilters("pan=mono|c0=c0,asetrate=48000")
     .audioCodec("pcm_s16le")
@@ -107,7 +107,7 @@ router_AWS.post("/sttaws", upload_AWS.single("audio"), (req, res) => {
       const params = {
         Bucket: "capstond-diary",
         Key: "record.wav" + Timestamp,
-        Body: fs_AWS.createReadStream(AWSfilePath),
+        Body: fs.createReadStream(AWSfilePath),
       };
 
       delete_run()
@@ -167,4 +167,4 @@ router_AWS.post("/sttaws", upload_AWS.single("audio"), (req, res) => {
     .save(outputFilePath);
 });
 
-module.exports = router_AWS;
+module.exports = router;

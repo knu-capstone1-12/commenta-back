@@ -1,8 +1,8 @@
 require("dotenv");
-const GPTNormalrouter = require("express").Router();
-const OpenAINormal = require("openai");
+const router = require("../utils/ExternalUtils").router;
+const OpenAI = require("../utils/ExternalUtils").OpenAI;
 
-const openaiNormal = new OpenAINormal({
+const openaiNormal = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const runPromptNormal = async (UserComment) => {
@@ -30,7 +30,7 @@ const runPromptNormal = async (UserComment) => {
   }
 };
 
-GPTNormalrouter.post("/gptnormal", async (req, res) => {
+router.post("/gptnormal", async (req, res) => {
   console.log("====== Incoming Connection (/gptnormal) ====");
   console.log("Connecting with API Key: " + process.env.OPENAI_API_KEY);
   let GPTresult = await runPromptNormal(req.body.content);
@@ -38,4 +38,4 @@ GPTNormalrouter.post("/gptnormal", async (req, res) => {
   console.log("===== Response Complete =======");
 });
 
-module.exports = GPTNormalrouter;
+module.exports = router;

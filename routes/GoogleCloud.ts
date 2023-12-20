@@ -1,9 +1,9 @@
-const ffmpeg = require("fluent-ffmpeg");
-const path = require("path");
-const fs = require("fs");
-const speech = require("@google-cloud/speech");
-const router = require("express").Router();
-const multer = require("multer");
+const router = require("../utils/ExternalUtils").router;
+const multer = require("../utils/ExternalUtils").multer;
+const fs = require("../utils/ExternalUtils").fs;
+const path = require("../utils/ExternalUtils").path;
+const ffmpeg = require("../utils/ExternalUtils").ffmpeg;
+const speech = require("../utils/ExternalUtils").speech;
 
 async function ConnectGCPAPI() {
   const filename = "./uploads/output.wav";

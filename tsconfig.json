@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "rootDir": "./"
+    "target": "ES5",
+    "rootDir": "./",
+    "moduleDetection": "force"
   },
   "include": ["./**/*.ts"],
   "exclude": ["node_modules"],
