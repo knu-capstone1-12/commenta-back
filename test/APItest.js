@@ -18,6 +18,7 @@ app.post("/sttrec", GoogleCloud);
 app.post("/senceemotion", EmotionAnalyze);
 app.post("/sttaws", AmazonTranscribe);
 app.post("/gptanalyze", GPTAPI);
+app.post("/gptscore", GPTAPI);
 app.post("/gptnormal", GPTNormalAPI);
 
 describe("POST /gptanalyze_good", () => {
@@ -68,6 +69,44 @@ describe("POST /gptnormal_test", () => {
       .expect("Content-Type", /json/)
       .then((res) => {
         console.log(res.body.text);
+        done();
+      })
+      .catch((err) => {
+        console.error("######Error >>", err);
+        done(err);
+      });
+  }).timeout(15000);
+});
+
+describe("POST /gptscore_sad", () => {
+  it("responds with json", (done) => {
+    request(app)
+      .post("/gptscore")
+      .set("Content-Type", "application/json")
+      .send({ content: "오늘은 너무 슬픈 날이었어. 교수님께 혼나고 왔어." })
+      .expect(200)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        console.log(res.body);
+        done();
+      })
+      .catch((err) => {
+        console.error("######Error >>", err);
+        done(err);
+      });
+  }).timeout(15000);
+});
+
+describe("POST /gptscore_good", () => {
+  it("responds with json", (done) => {
+    request(app)
+      .post("/gptscore")
+      .set("Content-Type", "application/json")
+      .send({ content: "오늘은 너무 기쁜 날이야." })
+      .expect(200)
+      .expect("Content-Type", /json/)
+      .then((res) => {
+        console.log(res.body);
         done();
       })
       .catch((err) => {
