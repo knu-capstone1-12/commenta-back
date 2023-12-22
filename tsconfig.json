@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "rootDir": "./",
+    "moduleDetection": "force"
+  },
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules"],
+  "watch": true
+}
